@@ -7,6 +7,7 @@ plugins {
     kotlin("plugin.spring") version "1.6.21"
     id("org.openapi.generator") version "6.2.1"
     id("org.liquibase.gradle") version "2.0.4"
+    id("docker.plugin") version "1.0.36"
 }
 
 val generatedRoot = "$rootDir/generated"
@@ -105,4 +106,9 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// override generated Application.kt
+springBoot {
+    mainClass.set("info.hauu.highloadsocial.HighloadSocialApplicationKt")
 }
