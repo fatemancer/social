@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.spring") version "1.6.21"
     id("org.openapi.generator") version "6.2.1"
+    id("org.liquibase.gradle") version "2.0.4"
 }
 
 val generatedRoot = "$rootDir/generated"
@@ -29,6 +30,7 @@ repositories {
 }
 
 dependencies {
+    // core & codegen
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -44,6 +46,15 @@ dependencies {
     // db
     implementation("org.springframework:spring-jdbc")
     implementation("mysql:mysql-connector-java:8.0.30")
+
+    // liquibase
+    liquibaseRuntime("org.liquibase:liquibase-core:4.2.2")
+    liquibaseRuntime("mysql:mysql-connector-java:5.1.34")
+
+    // logs
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
+
+
 
 //    implementation("org.springframework.boot:spring-boot-starter-test")
 //    testImplementation("org.springframework.boot:spring-boot-starter-test")
