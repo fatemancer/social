@@ -1,4 +1,4 @@
-package com.example.highloadsocial
+package info.hauu.highloadsocial
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

@@ -1,0 +1,299 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OTUS Highload Architect",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/login": {
+      "post": {
+        "description": "Упрощенный процесс аутентификации путем передачи идентификатор пользователя и получения токена для дальнейшего прохождения авторизации",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "234"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Секретная строка"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешная аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          },
+          "500": {
+            "$ref": "#/components/responses/5xx"
+          },
+          "503": {
+            "$ref": "#/components/responses/5xx"
+          }
+        }
+      }
+    },
+    "/user/register": {
+      "post": {
+        "description": "Регистрация нового пользователя",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "type": "string",
+                    "example": "Имя"
+                  },
+                  "second_name": {
+                    "type": "string",
+                    "example": "Фамилия"
+                  },
+                  "age": {
+                    "type": "integer",
+                    "example": 18
+                  },
+                  "biography": {
+                    "type": "string",
+                    "example": "Хобби, интересы и т.п."
+                  },
+                  "city": {
+                    "type": "string",
+                    "example": "Москва"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Секретная строка"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешная регистрация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": {
+                      "type": "string",
+                      "example": "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "500": {
+            "$ref": "#/components/responses/5xx"
+          },
+          "503": {
+            "$ref": "#/components/responses/5xx"
+          }
+        }
+      }
+    },
+    "/user/get/{id}": {
+      "get": {
+        "description": "Получение анкеты пользователя",
+        "parameters": [
+          {
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "description": "Идентификатор пользователя",
+              "example": "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58"
+            },
+            "required": true,
+            "in": "path",
+            "description": "Идентификатор пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешное получение анкеты пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "404": {
+            "description": "Анкета не найдена"
+          },
+          "500": {
+            "$ref": "#/components/responses/5xx"
+          },
+          "503": {
+            "$ref": "#/components/responses/5xx"
+          }
+        }
+      }
+    },
+    "/user/search": {
+      "get": {
+        "description": "Поиск анкет",
+        "parameters": [
+          {
+            "name": "first_name",
+            "schema": {
+              "type": "string",
+              "description": "Часть имени для поиска",
+              "example": "Конст"
+            },
+            "in": "query",
+            "required": true,
+            "description": "Условие поиска по имени"
+          },
+          {
+            "name": "last_name",
+            "schema": {
+              "type": "string",
+              "description": "Часть фамилии для поиска",
+              "example": "Оси"
+            },
+            "in": "query",
+            "required": true,
+            "description": "Условие поиска по фамилии"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешные поиск пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидные данные"
+          },
+          "500": {
+            "$ref": "#/components/responses/5xx"
+          },
+          "503": {
+            "$ref": "#/components/responses/5xx"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "5xx": {
+        "description": "Ошибка сервера",
+        "headers": {
+          "Retry-After": {
+            "description": "Время, через которое еще раз нужно сделать запрос",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["message"],
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Описание ошибки"
+                },
+                "request_id": {
+                  "type": "string",
+                  "description": "Идентификатор запроса. Предназначен для более быстрого поиска проблем."
+                },
+                "code": {
+                  "type": "integer",
+                  "description": "Код ошибки. Предназначен для классификации проблем и более быстрого решения проблем."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Идентификатор пользователя"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Имя",
+            "description": "Имя"
+          },
+          "second_name": {
+            "type": "string",
+            "example": "Фамилия",
+            "description": "Фамилия"
+          },
+          "age": {
+            "type": "integer",
+            "example": 18,
+            "description": "Возраст"
+          },
+          "biography": {
+            "type": "string",
+            "example": "Хобби, интересы и т.п.",
+            "description": "Интересы"
+          },
+          "city": {
+            "type": "string",
+            "example": "Москва",
+            "description": "Город"
+          }
+        }
+      }
+    }
+  }
+}

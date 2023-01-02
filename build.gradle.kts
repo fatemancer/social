@@ -1,16 +1,26 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.0.2-SNAPSHOT"
+    id("org.springframework.boot") version "2.6.7"
     id("io.spring.dependency-management") version "1.1.0"
-    kotlin("jvm") version "1.7.22"
-    kotlin("plugin.spring") version "1.7.22"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.spring") version "1.6.21"
     id("org.openapi.generator") version "6.2.1"
 }
 
+val generatedRoot = "$rootDir/generated"
+
+sourceSets {
+    val main by getting
+    main.java.srcDir("${generatedRoot}/src/main/kotlin")
+    val test by getting
+    test.java.srcDir("${generatedRoot}/src/main/kotlin")
+}
+
+
 group = "info.hauu"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -22,10 +32,33 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springdoc:springdoc-openapi-ui:1.5.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("javax.servlet:javax.servlet-api:4.0.1")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    implementation("org.springframework.boot:spring-boot-starter-test")
+
+//    implementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    implementation("org.springframework.boot:spring-boot-starter-validation")
+//    implementation("javax.validation:validation-api:2.0.1.Final")
+//    implementation("io.swagger.core.v3:swagger-annotations:2.2.6")
+//    implementation("io.swagger.core.v3:swagger-core:2.2.6")
+//    implementation("io.swagger.core.v3:swagger-maven-plugin:2.2.6")
+//    implementation("io.swagger.core.v3:swagger-jaxrs2:2.2.6")
+//    implementation("javax.ws.rs:javax.ws.rs-api:2.1")
+//    implementation("javax.servlet:javax.servlet-api:4.0.1")
+
+//    implementation("io.swagger.core.v3:swagger-maven-plugin-jakarta:2.2.6")
+//    implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.6")
+//    implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+//    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+//    implementation("jakarta.ws.rs:jakarta.ws.rs-api:3.1.0")
+
+
 }
 
 tasks.openApiGenerate {
@@ -33,7 +66,7 @@ tasks.openApiGenerate {
 }
 
 tasks.compileKotlin {
-    dependsOn (":openApiGenerate")
+    dependsOn(":openApiGenerate")
 }
 
 openApiGenerate {
@@ -43,14 +76,14 @@ openApiGenerate {
     modelPackage.set("org.openapi.model")
     invokerPackage.set("info.hauu.highloadsocial")
     inputSpec.set("$rootDir/src/main/resources/openapi.json")
-    outputDir.set("$rootDir/generated/src")
-    additionalProperties.put("gradleBuildFile", false)
+    outputDir.set(generatedRoot)
+    additionalProperties.put("gradleBuildFile", true)
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
+        jvmTarget = "11"
     }
 }
 
