@@ -41,6 +41,10 @@ dependencies {
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
     implementation("org.springframework.boot:spring-boot-starter-test")
 
+    // db
+    implementation("org.springframework:spring-jdbc")
+    implementation("mysql:mysql-connector-java:8.0.30")
+
 //    implementation("org.springframework.boot:spring-boot-starter-test")
 //    testImplementation("org.springframework.boot:spring-boot-starter-test")
 //    implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -78,6 +82,7 @@ openApiGenerate {
     inputSpec.set("$rootDir/src/main/resources/openapi.json")
     outputDir.set(generatedRoot)
     additionalProperties.put("gradleBuildFile", true)
+    configOptions.put("delegatePattern", "true")
 }
 
 tasks.withType<KotlinCompile> {
