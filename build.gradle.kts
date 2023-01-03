@@ -51,6 +51,7 @@ dependencies {
     // liquibase
     liquibaseRuntime("org.liquibase:liquibase-core:4.2.2")
     liquibaseRuntime("mysql:mysql-connector-java:5.1.34")
+    runtimeOnly("org.liquibase:liquibase-core:4.2.2")
 
     // logs
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
