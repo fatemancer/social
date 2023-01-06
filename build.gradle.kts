@@ -7,7 +7,6 @@ plugins {
     kotlin("plugin.spring") version "1.6.21"
     id("org.openapi.generator") version "6.2.1"
     id("org.liquibase.gradle") version "2.0.4"
-    id("docker.plugin") version "1.0.36"
 }
 
 val generatedRoot = "$rootDir/generated"
@@ -18,7 +17,6 @@ sourceSets {
     val test by getting
     test.java.srcDir("${generatedRoot}/src/main/kotlin")
 }
-
 
 group = "info.hauu"
 version = "0.0.1-SNAPSHOT"
@@ -55,27 +53,6 @@ dependencies {
 
     // logs
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
-
-
-
-//    implementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    implementation("org.springframework.boot:spring-boot-starter-validation")
-//    implementation("javax.validation:validation-api:2.0.1.Final")
-//    implementation("io.swagger.core.v3:swagger-annotations:2.2.6")
-//    implementation("io.swagger.core.v3:swagger-core:2.2.6")
-//    implementation("io.swagger.core.v3:swagger-maven-plugin:2.2.6")
-//    implementation("io.swagger.core.v3:swagger-jaxrs2:2.2.6")
-//    implementation("javax.ws.rs:javax.ws.rs-api:2.1")
-//    implementation("javax.servlet:javax.servlet-api:4.0.1")
-
-//    implementation("io.swagger.core.v3:swagger-maven-plugin-jakarta:2.2.6")
-//    implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.6")
-//    implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
-//    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
-//    implementation("jakarta.ws.rs:jakarta.ws.rs-api:3.1.0")
-
-
 }
 
 tasks.openApiGenerate {
@@ -84,6 +61,18 @@ tasks.openApiGenerate {
 
 tasks.compileKotlin {
     dependsOn(":openApiGenerate")
+}
+
+task<Exec>("dockerBuild") {
+    commandLine("docker-compose", "build", "--no-cache")
+    group = "docker"
+    dependsOn(":bootJar")
+}
+
+task<Exec>("dockerCompose") {
+    commandLine("docker-compose","up","-d")
+    group = "docker"
+    dependsOn(":dockerBuild")
 }
 
 openApiGenerate {
