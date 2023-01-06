@@ -53,6 +53,9 @@ dependencies {
 
     // logs
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
+
+    // pw handling
+    implementation("de.nycode:bcrypt:2.3.0")
 }
 
 tasks.openApiGenerate {
