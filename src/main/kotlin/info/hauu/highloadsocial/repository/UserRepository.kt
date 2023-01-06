@@ -1,13 +1,12 @@
 package info.hauu.highloadsocial.repository
 
 import de.nycode.bcrypt.hash
+import de.nycode.bcrypt.verify
 import info.hauu.highloadsocial.model.UserInternal
 import info.hauu.highloadsocial.model.UserRow
+import info.hauu.highloadsocial.service.LoginService
 import mu.KotlinLogging
-import org.springframework.jdbc.core.DataClassRowMapper
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.PreparedStatementCreator
-import org.springframework.jdbc.core.PreparedStatementSetter
+import org.springframework.jdbc.core.*
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -96,7 +95,7 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
                 it.setString(1, firstName)
                 it.setString(2, secondName)
             }
-            val query = userQuery + whereName;
+            val query = userQuery + whereName
             jdbcTemplate.query(
                 query,
                 ps,
@@ -105,6 +104,23 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
         } catch (e: Exception) {
             logger.error("Failed to retrieve users {}", e)
             null
+        }
+    }
+
+    fun login(id: String, password: String): LoginService.LoginState {
+        val rm = SingleColumnRowMapper(ByteArray::class.java)
+        val ps = PreparedStatementSetter {
+            it.setString(1, id)
+        }
+        val bcrypt = jdbcTemplate.query("SELECT bcrypt FROM user_credentials WHERE user_id = ?", ps, rm)
+        if (bcrypt.isEmpty()) {
+            logger.warn { "User {} not found".format(id) }
+            return LoginService.LoginState.NOT_FOUND
+        }
+        return if (verify(password, bcrypt[0])) {
+            LoginService.LoginState.SUCCESS
+        } else {
+            LoginService.LoginState.NOT_ALLOWED
         }
     }
 

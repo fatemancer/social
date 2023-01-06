@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS user_tags
 CREATE TABLE IF NOT EXISTS user_credentials
 (
     user_id VARCHAR(80),
-    bcrypt BINARY(160),
+    bcrypt BINARY(60),
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE,
     PRIMARY KEY (user_id)

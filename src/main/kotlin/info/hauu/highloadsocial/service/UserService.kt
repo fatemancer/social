@@ -12,16 +12,12 @@ import org.openapi.model.UserRegisterPost200Response
 import org.openapi.model.UserRegisterPostRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import org.springframework.web.context.request.NativeWebRequest
 import java.util.*
 
 private val logger = KotlinLogging.logger {}
 
 @Service
 class UserService(val userRepository: UserRepository) : UserApiDelegate {
-    override fun getRequest(): Optional<NativeWebRequest> {
-        return super.getRequest()
-    }
 
     override fun userGetIdGet(id: String): ResponseEntity<User> {
         val user = userRepository.find(id) ?: return ResponseEntity.notFound().build()
@@ -30,7 +26,7 @@ class UserService(val userRepository: UserRepository) : UserApiDelegate {
 
     override fun userRegisterPost(userRegisterPostRequest: UserRegisterPostRequest?): ResponseEntity<UserRegisterPost200Response> {
         validate(userRegisterPostRequest).apply {
-            logger.debug("Will create user {}", this);
+            logger.debug("Will create user {}", this)
             userRepository.save(this)
             return ResponseEntity.ok(UserRegisterPost200Response(id))
         }
