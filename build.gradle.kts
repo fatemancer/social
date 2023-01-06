@@ -47,9 +47,9 @@ dependencies {
     implementation("mysql:mysql-connector-java:8.0.30")
 
     // liquibase
-    liquibaseRuntime("org.liquibase:liquibase-core:4.2.2")
+    liquibaseRuntime("org.liquibase:liquibase-core:4.3.5")
     liquibaseRuntime("mysql:mysql-connector-java:5.1.34")
-    runtimeOnly("org.liquibase:liquibase-core:4.2.2")
+    runtimeOnly("org.liquibase:liquibase-core:4.3.5")
 
     // logs
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
@@ -77,6 +77,13 @@ task<Exec>("dockerCompose") {
     group = "docker"
     dependsOn(":dockerBuild")
 }
+
+//task<Exec>("dockerClearDb") {
+////    group = "docker"
+////    commandLine("docker", "stop", "mysqldb", "-t", "1")
+////    commandLine("sleep", "5")
+////    commandLine("docker", "volume", "rm", "social_db", "-f")
+//}
 
 openApiGenerate {
     generatorName.set("kotlin-spring")

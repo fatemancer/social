@@ -15,7 +15,7 @@ fun hasId(req: LoginPostRequest?): String? = if (req?.id == null) { USER_ID } el
 
 class Constraints private constructor(val constraints: List<String>) {
 
-    constructor(vararg cs: String?): this(listOfNotNull(cs).map { it.toString()})
+    constructor(vararg cs: String?): this(listOfNotNull(*cs))
 
     fun test() {
         if (constraints.isEmpty()) {

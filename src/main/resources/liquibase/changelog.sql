@@ -3,7 +3,7 @@
 -- changeset liquibase:1
 CREATE TABLE IF NOT EXISTS users
 (
-    id VARCHAR(36),
+    id VARCHAR(80),
     first_name    VARCHAR(256),
     second_name   VARCHAR(256),
     age     INT,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS location
 (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    user_id VARCHAR(36),
+    user_id VARCHAR(80),
     city VARCHAR(128),
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE,
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS tags
 CREATE TABLE IF NOT EXISTS user_tags
 (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    tag_id INT,
-    user_id VARCHAR(36),
+    tag_id BIGINT,
+    user_id VARCHAR(80),
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id)
@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS user_tags
     );
 CREATE TABLE IF NOT EXISTS user_credentials
 (
-    user_id VARCHAR(36),
-    bcrypt BINARY(40),
+    user_id VARCHAR(80),
+    bcrypt BINARY(160),
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE,
     PRIMARY KEY (user_id)

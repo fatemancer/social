@@ -11,12 +11,14 @@ import org.openapi.model.User
 import org.openapi.model.UserRegisterPost200Response
 import org.openapi.model.UserRegisterPostRequest
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
 import org.springframework.web.context.request.NativeWebRequest
 import java.util.*
 
 private val logger = KotlinLogging.logger {}
 
-open class UserService(val userRepository: UserRepository) : UserApiDelegate {
+@Service
+class UserService(val userRepository: UserRepository) : UserApiDelegate {
     override fun getRequest(): Optional<NativeWebRequest> {
         return super.getRequest()
     }
@@ -30,7 +32,7 @@ open class UserService(val userRepository: UserRepository) : UserApiDelegate {
         validate(userRegisterPostRequest).apply {
             logger.debug("Will create user {}", this);
             userRepository.save(this)
-            return ResponseEntity.ok(UserRegisterPost200Response(id.toString()))
+            return ResponseEntity.ok(UserRegisterPost200Response(id))
         }
     }
 
@@ -38,7 +40,7 @@ open class UserService(val userRepository: UserRepository) : UserApiDelegate {
         Constraints(hasPassword(userRegisterPostRequest), hasId(userRegisterPostRequest)).test()
         return userRegisterPostRequest!!.run {
             info.hauu.highloadsocial.model.UserInternal(
-                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
                 firstName!!,
                 secondName.orEmpty(),
                 age,

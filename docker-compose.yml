@@ -10,6 +10,7 @@ services:
       - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
     volumes:
       - db:/var/lib/mysql
+      - ./db/my.cnf:/etc/my.cnf
   app:
     depends_on:
       - mysqldb
@@ -18,6 +19,7 @@ services:
     env_file: ./.env
     ports:
       - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+      - $JAVA_DEBUG_PORT:$JAVA_DEBUG_PORT
     environment:
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url"  : "jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE?useSSL=false",

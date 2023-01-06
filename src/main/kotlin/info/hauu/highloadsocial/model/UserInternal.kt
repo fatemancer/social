@@ -5,7 +5,7 @@ import java.util.*
 
 data class UserInternal(
 
-    val id: UUID,
+    val id: String,
 
     @Schema(example = "Имя", description = "")
     val firstName: kotlin.String,
