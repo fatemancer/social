@@ -78,6 +78,12 @@ task<Exec>("dockerCompose") {
     dependsOn(":dockerBuild")
 }
 
+task<Exec>("dockerLoadTest") {
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "build", "--no-cache")
+    group = "docker"
+    dependsOn(":bootJar")
+}
+
 openApiGenerate {
     generatorName.set("kotlin-spring")
     library.set("spring-boot")
