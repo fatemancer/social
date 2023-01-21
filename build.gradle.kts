@@ -78,6 +78,11 @@ task<Exec>("dockerCompose") {
     dependsOn(":dockerBuild")
 }
 
+task<Exec>("dockerComposeDown") {
+    commandLine("docker-compose", "down")
+    group = "docker"
+}
+
 task<Exec>("dockerLoadTest") {
     doFirst {
         ant.withGroovyBuilder {
@@ -88,9 +93,15 @@ task<Exec>("dockerLoadTest") {
             )
         }
     }
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "build", "--no-cache")
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "./.env", "build", "--no-cache")
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "./.env", "up", "-d")
     group = "docker"
     dependsOn(":bootJar")
+}
+
+task<Exec>("dockerComposeLoadTestDown") {
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "down")
+    group = "docker"
 }
 
 openApiGenerate {
