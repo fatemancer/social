@@ -1,5 +1,5 @@
 services:
-  mysqldb:
+  mysqldb_load:
     image: mysql:8.0.30
     restart: unless-stopped
     env_file: ./.env
@@ -10,16 +10,16 @@ services:
       && /entrypoint.sh mysqld
       "
     environment:
-      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
-      - MYSQL_DATABASE=$MYSQLDB_DATABASE
+      - MYSQL_ROOT_PASSWORD=$MYSQLDB_LOAD_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQLDB_LOAD_DATABASE
     ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+      - $MYSQLDB_LOAD_LOCAL_PORT:$MYSQLDB_LOAD_DOCKER_PORT
     volumes:
       - db:/var/lib/mysql
       - ./db/my.cnf:/etc/my.cnf
   app:
     depends_on:
-      - mysqldb
+      - mysqldb_load
     build: ./
     restart: on-failure
     env_file: ./.env
@@ -34,15 +34,23 @@ services:
       }'
     stdin_open: true
     tty: true
+  # restore db with 1'000'000 users for load testing
   sql_init:
     depends_on:
       - app
-      - mysqldb
+      - mysqldb_load
+    command:
+      - >
+        bash -c "
+        chmod 644 /etc/my.cnf
+        && gunzip /tmp/mysql.gz
+        && mysql -h mysqldb:$MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -u root -p $MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql
+        "
     restart: no
     volumes:
-      - ./test/resources/db/people.csv.gz:/tmp/ppl.gz
-      - ./test/resources/db/import.sql:/tmp/import.sql
-    entrypoint: "zcat /tmp/ppl.gz > /var/lib/mysql-files/ppl.csv && mysql -h mysqldb -u $MYSQLDB_USER -P $MYSQLDB_ROOT_PASSWORD < /tmp/import.sql"
+      - db:/var/lib/mysql
+      - ./db/my.cnf:/etc/my.cnf
+      - ./src/test/generated/mysql.gz:/tmp/mysql.gz
 
 volumes:
   db:

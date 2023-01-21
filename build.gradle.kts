@@ -73,12 +73,21 @@ task<Exec>("dockerBuild") {
 }
 
 task<Exec>("dockerCompose") {
-    commandLine("docker-compose","up","-d")
+    commandLine("docker-compose", "up", "-d")
     group = "docker"
     dependsOn(":dockerBuild")
 }
 
 task<Exec>("dockerLoadTest") {
+    doFirst {
+        ant.withGroovyBuilder {
+            "get"(
+                "src" to "http://v1622841.hosted-by-vdsina.ru/mysql.gz",
+                "dest" to "src/test/resources/generated/mysql.gz",
+                "skipexisting" to true
+            )
+        }
+    }
     commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "build", "--no-cache")
     group = "docker"
     dependsOn(":bootJar")
