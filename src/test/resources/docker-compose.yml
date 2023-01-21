@@ -34,7 +34,7 @@ services:
       }'
     stdin_open: true
     tty: true
-  # restore db with 1'000'000 users for load testing
+  # restore db with 1'000'000 users for load testing IF the db is empty (users == 0)
   sql_init:
     depends_on:
       - app
@@ -43,8 +43,8 @@ services:
       - >
         bash -c "
         chmod 644 /etc/my.cnf
-        && gunzip /tmp/mysql.gz
-        && mysql -h mysqldb:$MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -u root -p $MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql
+        && USERCOUNT=$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
+        && if (($USERCOUNT == 0)); then gunzip /tmp/mysql.gz && mysql -h mysqldb:$MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -u root -p $MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql ; fi
         "
     restart: no
     volumes:
