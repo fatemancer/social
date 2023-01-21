@@ -28,6 +28,15 @@ services:
       }'
     stdin_open: true
     tty: true
+  sql_init:
+    depends_on:
+      - app
+      - mysqldb
+    restart: no
+    volumes:
+      - ./test/resources/db/people.csv.gz:/tmp/ppl.gz
+      - ./test/resources/db/import.sql:/tmp/import.sql
+    entrypoint: "zcat /tmp/ppl.gz > /var/lib/mysql-files/ppl.csv && mysql -h mysqldb -u $MYSQLDB_USER -P $MYSQLDB_ROOT_PASSWORD < /tmp/import.sql"
 
 volumes:
   db:
