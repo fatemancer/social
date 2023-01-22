@@ -2,7 +2,7 @@ services:
   mysqldb_load:
     image: mysql:8.0.30
     restart: unless-stopped
-    env_file: ./../../../.env
+    env_file: ./.env
     # windows host fix
     command: >
       bash -c "
@@ -22,31 +22,30 @@ services:
       - mysqldb_load
     build: ./../../../
     restart: on-failure
-    env_file: ./../../../.env
+    env_file: ./.env
     ports:
       - $SPRING_LOAD_LOCAL_PORT:$SPRING_LOAD_DOCKER_PORT
       - $JAVA_LOAD_DEBUG_PORT:$JAVA_LOAD_DEBUG_PORT
     environment:
       SPRING_APPLICATION_JSON: '{
-        "spring.datasource.url"  : "jdbc:mysql://mysqldb:$MYSQLDB_LOAD_DOCKER_PORT/$MYSQLDB_LOAD_DATABASE?useSSL=false&createDatabaseIfNotExist=true",
-        "spring.datasource.username" : "$MYSQLDB_USER",
-        "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD"
+        "spring.datasource.url"  : "jdbc:mysql://mysqldb_load:$MYSQLDB_LOAD_DOCKER_PORT/$MYSQLDB_LOAD_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
+        "spring.datasource.username" : "$MYSQLDB_LOAD_USER",
+        "spring.datasource.password" : "$MYSQLDB_LOAD_ROOT_PASSWORD"
       }'
     stdin_open: true
     tty: true
   # restore db with 1'000'000 users for load testing IF the db is empty (users == 0)
   sql_init:
     image: mysql:8.0.30
-    env_file: ./../../../.env
+    env_file: ./.env
     depends_on:
       - app
       - mysqldb_load
-    command:
-      - >
+    command: >
         bash -c "
         chmod 644 /etc/my.cnf
         && USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
-        && if (($$USERCOUNT == 0)); then gunzip /tmp/mysql.gz && mysql -h mysqldb:$MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -u root -p $MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql ; fi
+        && if (($$USERCOUNT == 0)); then gunzip -k /tmp/mysql.gz && mysql -h mysqldb_load -P $MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -uroot -p$MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql ; fi
         "
     restart: "no"
     volumes:

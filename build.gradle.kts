@@ -66,42 +66,48 @@ tasks.compileKotlin {
     dependsOn(":openApiGenerate")
 }
 
-task<Exec>("dockerBuild") {
+task<Exec>("appBuild") {
     commandLine("docker-compose", "build", "--no-cache")
-    group = "docker"
+    group = "docker enable"
     dependsOn(":bootJar")
 }
 
-task<Exec>("dockerCompose") {
+task<Exec>("appUp") {
     commandLine("docker-compose", "up", "-d")
-    group = "docker"
+    group = "docker enable"
     dependsOn(":dockerBuild")
 }
 
-task<Exec>("dockerComposeDown") {
+task<Exec>("appDown") {
     commandLine("docker-compose", "down")
-    group = "docker"
+    group = "docker disable"
 }
 
-task<Exec>("dockerLoadTest") {
+task<Exec>("loadTestUp") {
     doFirst {
+        // explicitly create 'generated' dir: otherwise this fails on Windows
+        val directory = File("src/test/resources/generated")
+        if (!directory.exists()) {
+            directory.mkdir()
+        }
         ant.withGroovyBuilder {
             "get"(
                 "src" to "http://v1622841.hosted-by-vdsina.ru/mysql.gz",
                 "dest" to "src/test/resources/generated/mysql.gz",
-                "skipexisting" to true
+                "skipexisting" to true,
+                "verbose" to "on"
             )
         }
     }
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "./.env", "build", "--no-cache")
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "./.env", "up", "-d")
-    group = "docker"
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "build", "--no-cache")
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "up", "-d")
+    group = "docker enable"
     dependsOn(":bootJar")
 }
 
-task<Exec>("dockerComposeLoadTestDown") {
+task<Exec>("loadTestDown") {
     commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "down")
-    group = "docker"
+    group = "docker disable"
 }
 
 openApiGenerate {
