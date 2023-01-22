@@ -56,6 +56,10 @@ dependencies {
 
     // pw handling
     implementation("de.nycode:bcrypt:2.3.0")
+
+    // metrics
+    implementation ("io.micrometer:micrometer-registry-prometheus")
+    implementation ("io.micrometer:micrometer-core")
 }
 
 tasks.openApiGenerate {
@@ -75,7 +79,7 @@ task<Exec>("appBuild") {
 task<Exec>("appUp") {
     commandLine("docker-compose", "up", "-d")
     group = "docker enable"
-    dependsOn(":dockerBuild")
+    dependsOn(":appBuild")
 }
 
 task<Exec>("appDown") {
@@ -99,7 +103,7 @@ task<Exec>("loadTestUp") {
             )
         }
     }
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "build", "--no-cache")
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "build", "--no-cache", "--force-recreate")
     commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "up", "-d")
     group = "docker enable"
     dependsOn(":bootJar")

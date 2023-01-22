@@ -42,16 +42,32 @@ services:
       - app
       - mysqldb_load
     command: >
-        bash -c "
-        chmod 644 /etc/my.cnf
-        && USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
-        && if (($$USERCOUNT == 0)); then gunzip -k /tmp/mysql.gz && mysql -h mysqldb_load -P $MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -uroot -p$MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql ; fi
-        "
+      bash -c "
+      chmod 644 /etc/my.cnf
+      && USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
+      && if (($$USERCOUNT == 0)); then echo 'Will restore dump' && gunzip -k /tmp/mysql.gz && mysql -h mysqldb_load -P $MYSQLDB_LOAD_DOCKER_PORT -D $MYSQLDB_LOAD_DATABASE -uroot -p$MYSQLDB_LOAD_ROOT_PASSWORD < /tmp/mysql ; else echo 'Will not restore dump: db not empty'; fi
+      "
     restart: "no"
     volumes:
       - db:/var/lib/mysql
       - ./db/my.cnf:/etc/my.cnf
       - ./generated/mysql.gz:/tmp/mysql.gz
+  grafana:
+    build: './metrics/config/grafana'
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/prometheus
 
 volumes:
   db:
