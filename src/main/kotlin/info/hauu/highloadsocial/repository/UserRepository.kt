@@ -27,7 +27,8 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
          WHERE 1 = 1
         """
     val whereId = """ AND u.id = ?"""
-    val whereName = """ AND u.first_name = ? AND u.second_name = ?"""
+    val whereName = """ AND u.first_name LIKE ? AND u.second_name LIKE ?"""
+    val orderingClause = """ ORDER BY id"""
 
     @Transactional
     fun save(user: UserInternal) {
@@ -92,10 +93,11 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
     fun find(firstName: String, secondName: String): List<UserRow>? {
         return try {
             val ps = PreparedStatementSetter {
-                it.setString(1, firstName)
-                it.setString(2, secondName)
+                it.setString(1, wrapLike(firstName))
+                it.setString(2, wrapLike(secondName))
             }
-            val query = userQuery + whereName
+            val query = userQuery + whereName + orderingClause
+            logger.info { query }
             jdbcTemplate.query(
                 query,
                 ps,
@@ -105,6 +107,10 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
             logger.error("Failed to retrieve users {}", e)
             null
         }
+    }
+
+    private fun wrapLike(value: String): String {
+        return "%$value%"
     }
 
     fun login(id: String, password: String): LoginService.LoginState {

@@ -87,6 +87,12 @@ task<Exec>("appDown") {
     group = "docker disable"
 }
 
+task<Exec>("loadTestBuild") {
+    dependsOn(":bootJar")
+    group = "docker enable"
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "build", "--no-cache")
+}
+
 task<Exec>("loadTestUp") {
     doFirst {
         // explicitly create 'generated' dir: otherwise this fails on Windows
@@ -103,10 +109,9 @@ task<Exec>("loadTestUp") {
             )
         }
     }
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "build", "--no-cache", "--force-recreate")
-    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "up", "-d")
+    commandLine("docker-compose", "-f", "src/test/resources/docker-compose.yml", "--env-file", "src/test/resources/.env", "up", "-d", "--force-recreate")
+    dependsOn(":loadTestBuild")
     group = "docker enable"
-    dependsOn(":bootJar")
 }
 
 task<Exec>("loadTestDown") {
