@@ -35,10 +35,10 @@ class QueryAmountTest(
     }
 
     @ParameterizedTest
-    @MethodSource("provideHeavy")
-    fun `Async run & wait for lots of queries`(amount: Int) {
+    @MethodSource("provideLight")
+    fun `Async run & wait for some queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
-        names.subList(0, amount).parallelStream().forEach { n ->
+        names.subList(0, amount).forEach { n ->
             val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
             tasks.add {
                 restTemplate.getForObject<String>(url)
@@ -48,10 +48,10 @@ class QueryAmountTest(
     }
 
     @ParameterizedTest
-    @MethodSource("provideLight")
-    fun `Async run & wait for some queries`(amount: Int) {
+    @MethodSource("provideHeavy")
+    fun `Async run & wait for lots of queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
-        names.subList(0, amount).parallelStream().forEach { n ->
+        names.subList(0, amount).forEach { n ->
             val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
             tasks.add {
                 restTemplate.getForObject<String>(url)

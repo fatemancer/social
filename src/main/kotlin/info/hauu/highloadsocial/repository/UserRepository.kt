@@ -110,7 +110,7 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
     }
 
     private fun wrapLike(value: String): String {
-        return "%$value%"
+        return "$value%"
     }
 
     fun login(id: String, password: String): LoginService.LoginState {
