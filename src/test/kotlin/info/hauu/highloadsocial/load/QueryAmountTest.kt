@@ -27,7 +27,7 @@ class QueryAmountTest(
 ) {
     lateinit var names: List<Pair<String, String>>;
     var restTemplate: TestRestTemplate = TestRestTemplate()
-    var executorService: ExecutorService = Executors.newFixedThreadPool(64)
+    var executorService: ExecutorService = Executors.newFixedThreadPool(256)
 
     @BeforeAll
     fun init() {
@@ -37,6 +37,19 @@ class QueryAmountTest(
     @ParameterizedTest
     @MethodSource("provideLight")
     fun `Async run & wait for some queries`(amount: Int) {
+        val tasks: MutableList<Callable<Any>> = mutableListOf()
+        names.subList(0, amount).forEach { n ->
+            val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
+            tasks.add {
+                restTemplate.getForObject<String>(url)
+            }
+        }
+        executorService.invokeAll(tasks)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMedium")
+    fun `Async run & wait for some more queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
         names.subList(0, amount).forEach { n ->
             val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
@@ -71,10 +84,20 @@ class QueryAmountTest(
         }
 
         @JvmStatic
+        fun provideMedium(): Stream<Arguments> {
+            return Stream.of(
+                    Arguments.of(100),
+                    Arguments.of(250),
+                    Arguments.of(750)
+            );
+        }
+
+        @JvmStatic
         fun provideHeavy(): Stream<Arguments> {
             return Stream.of(
-                    Arguments.of(1000),
-                    Arguments.of(5000)
+                    Arguments.of(2000),
+                    Arguments.of(5000),
+                    Arguments.of(10000)
             );
         }
     }
