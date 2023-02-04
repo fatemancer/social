@@ -1,7 +1,7 @@
 services:
   app:
     depends_on:
-      - percona-master
+      - $MYSQLDB_MASTER_HOST
     build: ./
     restart: on-failure
     env_file: ./.env
@@ -11,8 +11,8 @@ services:
     environment:
       # looks like ssl=off is not sufficient, public key retrieval should be enabled (?)
       SPRING_APPLICATION_JSON: '{
-        "spring.datasource.url"  : "jdbc:mysql://percona-master:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
-        "spring.datasource.replica-url"  : "jdbc:mysql://$MYSQLDB_REPLICA_HOST:$MYSQLDB_REPLICA_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
+        "spring.datasource.url"  : "jdbc:mysql://$MYSQLDB_MASTER_HOST:$MYSQLDB_MASTER_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
+        "spring.datasource.replica-url"  : "jdbc:mysql://$MYSQLDB_REPLICA_HOST:$MYSQLDB_REPLICA1_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
         "spring.datasource.username" : "$MYSQLDB_USER",
         "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD"
       }'

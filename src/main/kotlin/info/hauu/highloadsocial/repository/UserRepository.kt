@@ -82,7 +82,7 @@ class UserRepository(
                 it.setString(1, id)
             }
             val query = userQuery + whereId
-            return jdbcTemplate.query(
+            return jdbcReplicaTemplate.query(
                     query,
                     ps,
                     userMapper
@@ -101,7 +101,7 @@ class UserRepository(
             }
             val query = userQuery + whereName + orderingClause
             logger.info { query }
-            jdbcTemplate.query(
+            jdbcReplicaTemplate.query(
                     query,
                     ps,
                     userMapper
