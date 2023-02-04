@@ -15,7 +15,10 @@ import java.sql.Statement
 private val logger = KotlinLogging.logger {}
 
 @Component
-class UserRepository(val jdbcTemplate: JdbcTemplate) {
+class UserRepository(
+        val jdbcTemplate: JdbcTemplate,
+        val jdbcReplicaTemplate: JdbcTemplate
+) {
 
     val userMapper = DataClassRowMapper(UserRow::class.java)
     val userQuery = """
@@ -47,11 +50,11 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
 
     fun UserInternal.saveUser() {
         jdbcTemplate.update(
-            "INSERT INTO users (id, first_name, second_name, age) VALUES (?, ?, ?, ?)",
-            id,
-            firstName,
-            secondName,
-            age
+                "INSERT INTO users (id, first_name, second_name, age) VALUES (?, ?, ?, ?)",
+                id,
+                firstName,
+                secondName,
+                age
         )
     }
 
@@ -69,7 +72,7 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
             ps.setString(2, biography)
             ps
         }
-        jdbcTemplate.update(ps,  tagKeyholder)
+        jdbcTemplate.update(ps, tagKeyholder)
         jdbcTemplate.update("INSERT INTO user_tags (tag_id, user_id) VALUES (?, ?)", tagKeyholder.key, id)
     }
 
@@ -80,9 +83,9 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
             }
             val query = userQuery + whereId
             return jdbcTemplate.query(
-                query,
-                ps,
-                userMapper
+                    query,
+                    ps,
+                    userMapper
             )[0]
         } catch (e: Exception) {
             logger.error("Failed to retrieve user {}", e)
@@ -99,9 +102,9 @@ class UserRepository(val jdbcTemplate: JdbcTemplate) {
             val query = userQuery + whereName + orderingClause
             logger.info { query }
             jdbcTemplate.query(
-                query,
-                ps,
-                userMapper
+                    query,
+                    ps,
+                    userMapper
             )
         } catch (e: Exception) {
             logger.error("Failed to retrieve users {}", e)

@@ -11,9 +11,14 @@ class DbProperties {
     lateinit var username: String
     lateinit var password: String
     lateinit var url: String
+    lateinit var replicaUrl: String
 
-    override fun toString(): String {
-        return "DbProperties(username='$username', password='$password', url='$url')"
+    fun host(): String {
+        return "$username:$password@$url"
+    }
+
+    fun replica(): String {
+        return "$username:$password@$replicaUrl"
     }
 
 }

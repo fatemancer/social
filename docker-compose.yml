@@ -1,25 +1,7 @@
 services:
-  mysqldb:
-    image: mysql:8.0.30
-    restart: unless-stopped
-    env_file: ./.env
-    # windows host fix
-    command: >
-      bash -c "
-      chmod 644 /etc/my.cnf
-      && /entrypoint.sh mysqld
-      "
-    environment:
-      - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
-      - MYSQL_DATABASE=$MYSQLDB_DATABASE
-    ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
-    volumes:
-      - db:/var/lib/mysql
-      - ./db/my.cnf:/etc/my.cnf
   app:
     depends_on:
-      - mysqldb
+      - percona-master
     build: ./
     restart: on-failure
     env_file: ./.env
@@ -27,13 +9,70 @@ services:
       - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
       - $JAVA_DEBUG_PORT:$JAVA_DEBUG_PORT
     environment:
+      # looks like ssl=off is not sufficient, public key retrieval should be enabled (?)
       SPRING_APPLICATION_JSON: '{
-        "spring.datasource.url"  : "jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true",
+        "spring.datasource.url"  : "jdbc:mysql://percona-master:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
+        "spring.datasource.replica-url"  : "jdbc:mysql://$MYSQLDB_REPLICA_HOST:$MYSQLDB_REPLICA_PORT/$MYSQLDB_DATABASE?useSSL=false&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true",
         "spring.datasource.username" : "$MYSQLDB_USER",
         "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD"
       }'
     stdin_open: true
     tty: true
+    networks:
+      - percona-network
 
+  percona-master:
+    image: percona/percona-server:8.0
+    env_file:
+      - ".env"
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_REPLICATION_USER: $MYSQLDB_USER
+      MYSQL_REPLICATION_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+    ports:
+      - "3306:3306"
+    networks:
+      - percona-network
+    volumes:
+      - percona-master:/var/lib/mysql
+      - ./db/my.cnf:/etc/my.cnf
+  percona-replica-1:
+    image: percona/percona-server:8.0
+    env_file:
+      - ".env"
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_REPLICATION_USER: $MYSQLDB_USER
+      MYSQL_REPLICATION_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_MASTER_HOST: percona-master
+      MYSQL_MASTER_PORT: 3306
+    ports:
+      - "3307:3306"
+    networks:
+      - percona-network
+    volumes:
+      - percona-replica-1:/var/lib/mysql
+      - ./db/my.cnf:/etc/my.cnf
+  percona-replica-2:
+    env_file:
+      - ".env"
+    image: percona/percona-server:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_REPLICATION_USER: $MYSQLDB_USER
+      MYSQL_REPLICATION_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_MASTER_HOST: percona-master
+      MYSQL_MASTER_PORT: 3306
+    ports:
+      - "3308:3306"
+    networks:
+      - percona-network
+    volumes:
+      - percona-replica-2:/var/lib/mysql
+      - ./db/my.cnf:/etc/my.cnf
 volumes:
-  db:
+  percona-master:
+  percona-replica-1:
+  percona-replica-2:
+networks:
+  percona-network:
