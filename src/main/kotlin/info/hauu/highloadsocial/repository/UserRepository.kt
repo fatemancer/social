@@ -5,6 +5,7 @@ import de.nycode.bcrypt.verify
 import info.hauu.highloadsocial.model.UserInternal
 import info.hauu.highloadsocial.model.UserRow
 import info.hauu.highloadsocial.service.LoginService
+import info.hauu.highloadsocial.service.internal.FeatureService
 import mu.KotlinLogging
 import org.springframework.jdbc.core.*
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -17,7 +18,8 @@ private val logger = KotlinLogging.logger {}
 @Component
 class UserRepository(
         val jdbcTemplate: JdbcTemplate,
-        val jdbcReplicaTemplate: JdbcTemplate
+        val jdbcReplicaTemplate: JdbcTemplate,
+        val featureService: FeatureService
 ) {
 
     val userMapper = DataClassRowMapper(UserRow::class.java)
@@ -82,7 +84,7 @@ class UserRepository(
                 it.setString(1, id)
             }
             val query = userQuery + whereId
-            return jdbcReplicaTemplate.query(
+            return provideConnector().query(
                     query,
                     ps,
                     userMapper
@@ -101,7 +103,7 @@ class UserRepository(
             }
             val query = userQuery + whereName + orderingClause
             logger.info { query }
-            jdbcReplicaTemplate.query(
+            provideConnector().query(
                     query,
                     ps,
                     userMapper
@@ -130,6 +132,14 @@ class UserRepository(
             LoginService.LoginState.SUCCESS
         } else {
             LoginService.LoginState.NOT_ALLOWED
+        }
+    }
+
+    fun provideConnector(): JdbcTemplate {
+        if (featureService.isReplica()) {
+            return jdbcReplicaTemplate
+        } else {
+            return jdbcTemplate
         }
     }
 
