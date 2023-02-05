@@ -64,6 +64,13 @@ services:
       - ./prometheus/ext:/prometheus
     networks:
       - service-network
+      - percona-network
+  db-exporter:
+    image: prom/mysqld-exporter
+    environment:
+      DATA_SOURCE_NAME: "exporter:exporter@(percona-master:$MYSQLDB_MASTER_PORT)/"
+    networks:
+      - percona-network
   percona-master:
     image: percona/percona-server:8.0
     env_file:

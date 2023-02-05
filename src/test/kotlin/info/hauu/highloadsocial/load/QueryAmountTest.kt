@@ -27,11 +27,11 @@ class QueryAmountTest(
 ) {
     lateinit var names: List<Pair<String, String>>;
     var restTemplate: TestRestTemplate = TestRestTemplate()
-    var executorService: ExecutorService = Executors.newFixedThreadPool(256)
+    var executorService: ExecutorService = Executors.newFixedThreadPool(128)
 
     @BeforeAll
     fun init() {
-        names = jdbcTemplate.queryForList("SELECT DISTINCT first_name, second_name FROM users\n" + "ORDER BY rand()\n" + "LIMIT 10000;").map { Pair(it["first_name"].toString(), it["second_name"].toString()) }
+        names = jdbcTemplate.queryForList("SELECT DISTINCT first_name, second_name FROM users\n" + "ORDER BY rand()\n" + "LIMIT 50000;").map { Pair(it["first_name"].toString(), it["second_name"].toString()) }
     }
 
     @ParameterizedTest
@@ -39,7 +39,7 @@ class QueryAmountTest(
     fun `Async run & wait for some queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
         names.subList(0, amount).forEach { n ->
-            val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
+            val url = "http://localhost:16868/user/search?first_name=${n.first}&last_name=${n.second}"
             tasks.add {
                 restTemplate.getForObject<String>(url)
             }
@@ -52,7 +52,7 @@ class QueryAmountTest(
     fun `Async run & wait for some more queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
         names.subList(0, amount).forEach { n ->
-            val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
+            val url = "http://localhost:16868/user/search?first_name=${n.first}&last_name=${n.second}"
             tasks.add {
                 restTemplate.getForObject<String>(url)
             }
@@ -65,13 +65,26 @@ class QueryAmountTest(
     fun `Async run & wait for lots of queries`(amount: Int) {
         val tasks: MutableList<Callable<Any>> = mutableListOf()
         names.subList(0, amount).forEach { n ->
-            val url = "http://localhost:6869/user/search?first_name=${n.first}&last_name=${n.second}"
+            val url = "http://localhost:16868/user/search?first_name=${n.first}&last_name=${n.second}"
             tasks.add {
                 restTemplate.getForObject<String>(url)
             }
         }
         executorService.invokeAll(tasks)
     }
+
+//    @ParameterizedTest
+//    @MethodSource("provideSuperHeavy")
+//    fun `Async run & wait for even more queries`(amount: Int) {
+//        val tasks: MutableList<Callable<Any>> = mutableListOf()
+//        names.subList(0, amount).forEach { n ->
+//            val url = "http://localhost:16868/user/search?first_name=${n.first}&last_name=${n.second}"
+//            tasks.add {
+//                restTemplate.getForObject<String>(url)
+//            }
+//        }
+//        executorService.invokeAll(tasks)
+//    }
 
     companion object {
         @JvmStatic
@@ -98,6 +111,14 @@ class QueryAmountTest(
                     Arguments.of(2000),
                     Arguments.of(5000),
                     Arguments.of(10000)
+            );
+        }
+        @JvmStatic
+        fun provideSuperHeavy(): Stream<Arguments> {
+            return Stream.of(
+                    Arguments.of(10000),
+                    Arguments.of(20000),
+                    Arguments.of(50000)
             );
         }
     }

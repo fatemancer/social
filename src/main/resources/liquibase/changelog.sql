@@ -44,3 +44,20 @@ CREATE TABLE IF NOT EXISTS user_credentials
     ON DELETE CASCADE,
     PRIMARY KEY (user_id)
 );
+
+--changeset liquibase:exporter
+CREATE USER IF NOT EXISTS 'exporter'@'localhost' IDENTIFIED BY 'exporter';
+GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'exporter'@'localhost';
+GRANT SELECT ON performance_schema.* TO 'exporter'@'localhost';
+
+--changeset liquibase:synthetictable
+CREATE TABLE IF NOT EXISTS numbers
+(
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+--changeset liquibase:missingindex
+CREATE INDEX name_surname_index ON users(first_name, second_name);
+

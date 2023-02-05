@@ -4,3 +4,14 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ["app:8080"]
+  - job_name: "db-master"
+    scrape_interval: 5s
+    static_configs:
+      - targets: [ "db-exporter:9104" ]
+    relabel_configs:
+    - source_labels: [ __address__ ]
+      target_label: instance
+    - source_labels: [ job ]
+      target_label: job
+    - target_label: __address__
+      replacement: db-exporter:9104

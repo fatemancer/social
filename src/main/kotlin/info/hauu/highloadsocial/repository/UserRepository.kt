@@ -21,7 +21,6 @@ class UserRepository(
         val jdbcReplicaTemplate: JdbcTemplate,
         val featureService: FeatureService
 ) {
-
     val userMapper = DataClassRowMapper(UserRow::class.java)
     val userQuery = """
          SELECT u.id as id, first_name, second_name, age, t.tag_value as biography, city
