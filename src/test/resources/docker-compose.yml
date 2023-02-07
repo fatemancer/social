@@ -22,12 +22,36 @@ services:
       - percona-network
       - service-network
   # restore db with 1'000'000 users for load testing IF the db is empty (users == 0)
-  sql_init:
+  init-cluster:
+  # идея: запускать до кластера, разделить том с мастером, также сделать короткий touch томов реплик
+    image: mysql:8.0.30
+    env_file: ./.env
+    command: >
+      bash -c "
+      chmod 644 /etc/my.cnf
+      && mysqld --initialise -h percona-master
+      || mysqld --initialise -h percona-replica-1
+      || mysqld --initialise -h percona-replica-2
+      "
+    restart: "no"
+    # do not exit: makes whole container green
+    stdin_open: true
+    tty: true
+    networks:
+      - percona-network
+    volumes:
+      - ./db/my.cnf:/etc/my.cnf
+  restore-backup:
+    # идея: запускать до кластера, разделить том с мастером, также сделать короткий touch томов реплик
+
+#    CREATE DATABASE mydb;
+#    GRANT ALL PRIVILEGES ON mydb.* TO 'myuser'@'%' IDENTIFIED BY 'mysql';
+#    GRANT ALL PRIVILEGES ON mydb.* TO 'myuser'@'localhost' IDENTIFIED BY 'mysql';
+#
     image: mysql:8.0.30
     env_file: ./.env
     depends_on:
       - app
-      - percona-master
     command: >
       bash -c "
       chmod 644 /etc/my.cnf
@@ -41,7 +65,6 @@ services:
     networks:
       - percona-network
     volumes:
-      - percona-master:/var/lib/mysql
       - ./db/my.cnf:/etc/my.cnf
       - ./generated/mysql.gz:/tmp/mysql.gz
   grafana:
@@ -75,6 +98,8 @@ services:
     image: percona/percona-xtradb-cluster:8.0
     container_name: percona-master
     hostname: percona-master
+    depends_on:
+      - init-cluster
     env_file:
       - ".env"
     environment:
@@ -85,12 +110,13 @@ services:
     networks:
       - percona-network
     volumes:
-      - percona-master:/var/lib/mysql:rw
       - ./db/my_master.cnf:/etc/my.cnf
   percona-replica-1:
     image: percona/percona-xtradb-cluster:8.0
     container_name: percona-replica-1
     hostname: percona-replica-1
+    depends_on:
+      - percona-master
     env_file:
       - ".env"
     environment:
@@ -103,13 +129,14 @@ services:
       - percona-network
     volumes:
       - ./db/my.cnf:/etc/my.cnf
-      - percona-replica-1:/var/lib/mysql
   percona-replica-2:
     env_file:
       - ".env"
     image: percona/percona-xtradb-cluster:8.0
     container_name: percona-replica-2
     hostname: percona-replica-2
+    depends_on:
+      - percona-master
     environment:
       MYSQL_ROOT_PASSWORD: $MYSQLDB_ROOT_PASSWORD
       CLUSTER_NAME: social
@@ -120,11 +147,6 @@ services:
       - percona-network
     volumes:
       - ./db/my.cnf:/etc/my.cnf
-      - percona-replica-2:/var/lib/mysql
-volumes:
-  percona-master:
-  percona-replica-1:
-  percona-replica-2:
 networks:
   percona-network:
   service-network:
