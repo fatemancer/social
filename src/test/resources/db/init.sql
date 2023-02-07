@@ -1,0 +1,2 @@
+CREATE USER 'app'@'%' IDENTIFIED BY 'app';
+GRANT ALL PRIVILEGES ON *.* TO 'app'@'%';

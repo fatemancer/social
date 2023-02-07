@@ -21,52 +21,44 @@ services:
     networks:
       - percona-network
       - service-network
-  # restore db with 1'000'000 users for load testing IF the db is empty (users == 0)
   init-cluster:
-  # идея: запускать до кластера, разделить том с мастером, также сделать короткий touch томов реплик
     image: mysql:8.0.30
     env_file: ./.env
+    depends_on:
+      - percona-master
     command: >
       bash -c "
-      chmod 644 /etc/my.cnf
-      && mysqld --initialise -h percona-master
-      || mysqld --initialise -h percona-replica-1
-      || mysqld --initialise -h percona-replica-2
+      mysql -uroot -proot < /tmp/init.sql
       "
-    restart: "no"
-    # do not exit: makes whole container green
-    stdin_open: true
+    restart: "on-failure"
     tty: true
     networks:
       - percona-network
     volumes:
       - ./db/my.cnf:/etc/my.cnf
+      - ./db/init.sql:/tmp/init.sql
+      - percona-master:/var/lib/mysql
   restore-backup:
-    # идея: запускать до кластера, разделить том с мастером, также сделать короткий touch томов реплик
-
-#    CREATE DATABASE mydb;
-#    GRANT ALL PRIVILEGES ON mydb.* TO 'myuser'@'%' IDENTIFIED BY 'mysql';
-#    GRANT ALL PRIVILEGES ON mydb.* TO 'myuser'@'localhost' IDENTIFIED BY 'mysql';
-#
     image: mysql:8.0.30
     env_file: ./.env
     depends_on:
       - app
+      - init-cluster
+      - percona-master
     command: >
       bash -c "
       chmod 644 /etc/my.cnf
-      && USERCOUNT=$$(mysql -h $MYSQLDB_MASTER_HOST -P $MYSQLDB_MASTER_PORT -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
-      && if (($$USERCOUNT == 0)); then echo 'Will restore dump' && gunzip -k /tmp/mysql.gz && mysql -h $MYSQLDB_MASTER_HOST -P $MYSQLDB_MASTER_PORT -D $MYSQLDB_DATABASE -uroot -p$MYSQLDB_ROOT_PASSWORD < /tmp/mysql ; else echo 'Will not restore dump: db not empty'; fi
+      && USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
+      && if (($$USERCOUNT == 0)); then echo 'Will restore dump' && gunzip -k /tmp/mysql.gz && mysql -D $MYSQLDB_DATABASE -uroot -p$MYSQLDB_ROOT_PASSWORD < /tmp/mysql ; else echo 'Will not restore dump: db not empty'; fi
       "
-    restart: "no"
-    # do not exit: makes whole container green
-    stdin_open: true
+    restart: "on-failure"
     tty: true
     networks:
       - percona-network
     volumes:
       - ./db/my.cnf:/etc/my.cnf
       - ./generated/mysql.gz:/tmp/mysql.gz
+      - percona-master:/var/lib/mysql
   grafana:
     build: './metrics/config/grafana'
     ports:
@@ -98,8 +90,11 @@ services:
     image: percona/percona-xtradb-cluster:8.0
     container_name: percona-master
     hostname: percona-master
-    depends_on:
-      - init-cluster
+    entrypoint: >
+      bash -c "
+      sed -i \"s|safe_to_bootstrap.*:.*|safe_to_bootstrap:1|1\" /var/lib/mysql/grastate.dat;
+      ./entrypoint.sh mysqld --wsrep-new-cluster
+      "
     env_file:
       - ".env"
     environment:
@@ -111,6 +106,7 @@ services:
       - percona-network
     volumes:
       - ./db/my_master.cnf:/etc/my.cnf
+      - percona-master:/var/lib/mysql
   percona-replica-1:
     image: percona/percona-xtradb-cluster:8.0
     container_name: percona-replica-1
@@ -150,3 +146,5 @@ services:
 networks:
   percona-network:
   service-network:
+volumes:
+  percona-master:
