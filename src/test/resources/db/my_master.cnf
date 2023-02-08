@@ -10,11 +10,16 @@ init-connect='SET NAMES utf8mb4'
 character-set-server = utf8mb4
 max_connections = 512
 skip-ssl
+# disable the following block before restoring the backup
 binlog_format = ROW
 gtid_mode = ON
 enforce_gtid_consistency = ON
+# end disable
 pxc_encrypt_cluster_traffic = OFF
 wsrep_provider = /usr/lib64/galera4/libgalera_smm.so
+wsrep_cluster_address=gcomm://percona-master,percona-replica-1,percona-replica-2
+bind-address = 0.0.0.0
+pxc_strict_mode = PERMISSIVE
 
 [sst]
 encrypt=0
