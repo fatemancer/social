@@ -15,3 +15,12 @@
 
 [Детальный отчёт](src/test/resources/report/report.pdf)
 
+## Домашка №3
+Нагрузочный вариант поднимается по `docker enable -> loadTestUp`, если база не пуста, то скачивает дамп на 1 миллион юзеров и разворачивает его на тестовой базе.
+Тестовая аппка слушает на 16868, база на 13307. Нагрузочный вариант может выполняться параллельно с основным приложением.
+
+[Генератор запросов](src/test/kotlin/info/hauu/highloadsocial/load/QueryAmountTest.kt)
+
+[Генератор запросов на запись](src/test/kotlin/info/hauu/highloadsocial/load/SyntheticLoadTest.kt)
+
+[Детальный отчёт](src/test/resources/report/report_p2.pdf)

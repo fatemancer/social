@@ -35,8 +35,8 @@ services:
     networks:
       - percona-network
     volumes:
-      - ./db/my.cnf:/etc/my.cnf
       - ./db/init.sql:/tmp/init.sql
+      - ./db/my.cnf:/etc/my.cnf:ro
       - percona-master:/var/lib/mysql
   restore-backup:
     image: mysql:8.0.30
@@ -47,8 +47,7 @@ services:
       - percona-master
     command: >
       bash -c "
-      chmod 644 /etc/my.cnf
-      && USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
+      USERCOUNT=$$(mysql -uroot -proot -D highload_social -B --disable-column-names -e 'select count(*) from users;')
       && if (($$USERCOUNT == 0)); then echo 'Will restore dump' && gunzip -k /tmp/mysql.gz && mysql -D $MYSQLDB_DATABASE -uroot -p$MYSQLDB_ROOT_PASSWORD < /tmp/mysql ; else echo 'Will not restore dump: db not empty'; fi
       "
     restart: "on-failure"
@@ -56,7 +55,7 @@ services:
     networks:
       - percona-network
     volumes:
-      - ./db/my.cnf:/etc/my.cnf
+      - ./db/my.cnf:/etc/my.cnf:ro
       - ./generated/mysql.gz:/tmp/mysql.gz
       - percona-master:/var/lib/mysql
   grafana:
@@ -105,7 +104,7 @@ services:
     networks:
       - percona-network
     volumes:
-      - ./db/my_master.cnf:/etc/my.cnf
+      - ./db/my.cnf:/etc/my.cnf:ro
       - percona-master:/var/lib/mysql
   percona-replica-1:
     image: percona/percona-xtradb-cluster:8.0
@@ -124,7 +123,7 @@ services:
     networks:
       - percona-network
     volumes:
-      - ./db/my.cnf:/etc/my.cnf
+      - ./db/my.cnf:/etc/my.cnf:ro
   percona-replica-2:
     env_file:
       - ".env"
@@ -142,7 +141,7 @@ services:
     networks:
       - percona-network
     volumes:
-      - ./db/my.cnf:/etc/my.cnf
+      - ./db/my.cnf:/etc/my.cnf:ro
 networks:
   percona-network:
   service-network:

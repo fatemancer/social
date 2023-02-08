@@ -18,10 +18,15 @@ class SyntheticLoadTest {
 
     @Test
     fun `Run & wait for some queries`() {
-        for (i in 1..300) {
+        var prev = 0
+        for (i in 1..300000) {
             val result = restTemplate.exchange("http://localhost:16868/internal/load", HttpMethod.PUT, null, Int::class.java)
-            println("$i : $result")
-            Thread.sleep(500)
+            if (result.body == -1) {
+                println("${i - 1} : $prev")
+                println("$i : $result")
+            }
+            prev = i
+            Thread.sleep(5)
         }
     }
 
