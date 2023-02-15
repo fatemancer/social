@@ -24,3 +24,6 @@
 [Генератор запросов на запись](src/test/kotlin/info/hauu/highloadsocial/load/SyntheticLoadTest.kt)
 
 [Детальный отчёт](src/test/resources/report/report_p2.pdf)
+
+## Домашка №4
+

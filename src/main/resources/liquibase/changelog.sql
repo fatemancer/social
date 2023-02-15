@@ -61,3 +61,5 @@ CREATE TABLE IF NOT EXISTS numbers
 --changeset liquibase:missingindex
 CREATE INDEX name_surname_index ON users(first_name, second_name);
 
+--changeset liquibase:addToken
+ALTER TABLE user_credentials ADD COLUMN token VARCHAR(60)

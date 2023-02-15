@@ -142,4 +142,28 @@ class UserRepository(
         }
     }
 
+    fun saveToken(username: String, token: String) {
+        val ps = PreparedStatementSetter {
+            it.setString(1, token)
+            it.setString(2, username)
+        }
+        provideConnector().update("UPDATE user_credentials SET token = ? WHERE user_id = ?", ps)
+    }
+
+    fun findIdByToken(token: String): String? {
+        return try {
+            val ps = PreparedStatementSetter {
+                it.setString(1, token)
+            }
+            val query = """SELECT user_id FROM user_credentials WHERE token = ?"""
+            return provideConnector().query(
+                query,
+                ps,
+                SingleColumnRowMapper<String>()
+            )[0]
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve user {}", e)
+            null
+        }
+    }
 }

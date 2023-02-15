@@ -44,6 +44,7 @@ dependencies {
     // db
     implementation("org.springframework:spring-jdbc")
     implementation("mysql:mysql-connector-java:8.0.30")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     // liquibase
     liquibaseRuntime("org.liquibase:liquibase-core:4.3.5")

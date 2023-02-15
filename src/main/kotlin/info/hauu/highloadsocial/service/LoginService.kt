@@ -24,13 +24,15 @@ class LoginService(val userRepository: UserRepository) : LoginApiDelegate {
             return when (userRepository.login(id, password)) {
                 LoginState.NOT_ALLOWED -> ResponseEntity.badRequest().build()
                 LoginState.NOT_FOUND -> ResponseEntity.notFound().build()
-                LoginState.SUCCESS -> ResponseEntity.ok(LoginPost200Response(createToken()))
+                LoginState.SUCCESS -> ResponseEntity.ok(LoginPost200Response(createToken(id)))
             }
         }
     }
 
-    private fun createToken(): String {
-        return UUID.randomUUID().toString()
+    private fun createToken(userId: String): String {
+        val token = UUID.randomUUID().toString()
+        userRepository.saveToken(userId, token)
+        return token
     }
 
     private fun validate(loginPostRequest: LoginPostRequest?): SafeLoginRequest {

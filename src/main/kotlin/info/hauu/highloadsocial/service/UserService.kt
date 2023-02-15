@@ -11,13 +11,17 @@ import org.openapi.model.User
 import org.openapi.model.UserRegisterPost200Response
 import org.openapi.model.UserRegisterPostRequest
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 import java.util.*
 
 private val logger = KotlinLogging.logger {}
 
 @Service
-class UserService(val userRepository: UserRepository) : UserApiDelegate {
+class UserService(val userRepository: UserRepository) : UserApiDelegate, UserDetailsService {
 
     override fun userGetIdGet(id: String): ResponseEntity<User> {
         val user = userRepository.find(id) ?: return ResponseEntity.notFound().build()
@@ -50,5 +54,25 @@ class UserService(val userRepository: UserRepository) : UserApiDelegate {
     override fun userSearchGet(firstName: String, lastName: String): ResponseEntity<List<User>> {
         val users = userRepository.find(firstName, lastName) ?: return ResponseEntity.badRequest().build()
         return ResponseEntity.of(Optional.of(users.map { u -> u.toModel() }.toList()))
+    }
+
+    fun findIdByToken(token: String): String? {
+        return userRepository.findIdByToken(token)
+    }
+    override fun loadUserByUsername(username: String?): UserDetails {
+        if (username == null) {
+            throw UsernameNotFoundException("User is null")
+        } else {
+            val user = userRepository.find(username)
+            if (user != null) {
+                return org.springframework.security.core.userdetails.User(
+                    username,
+                    "",
+                    mutableListOf(SimpleGrantedAuthority("REGISTERED"))
+                )
+            } else {
+                throw UsernameNotFoundException("User was initially found but then not found. This is likely a sync issue")
+            }
+        }
     }
 }
