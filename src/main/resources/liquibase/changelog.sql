@@ -63,3 +63,40 @@ CREATE INDEX name_surname_index ON users(first_name, second_name);
 
 --changeset liquibase:addToken
 ALTER TABLE user_credentials ADD COLUMN token VARCHAR(60)
+
+--changeset liquibase:posts
+CREATE TABLE IF NOT EXISTS posts
+(
+    id         BIGINT NOT NULL AUTO_INCREMENT,
+    user_id    VARCHAR(80),
+    post_title TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+    ON DELETE CASCADE,
+    PRIMARY KEY (id)
+    );
+
+CREATE TABLE IF NOT EXISTS posts_content
+(
+    post_id BIGINT NOT NULL,
+    post    MEDIUMTEXT,
+    FOREIGN KEY (post_id) REFERENCES posts (id)
+    ON DELETE CASCADE
+    );
+CREATE INDEX posts_idx ON posts (id);
+CREATE INDEX posts_content_idx ON posts_content (post_id);
+
+--changeset liquibase:friends
+CREATE TABLE IF NOT EXISTS friends
+(
+    id            BIGINT      NOT NULL AUTO_INCREMENT,
+    subscriber_id VARCHAR(80) NOT NULL,
+    publisher_id  VARCHAR(80) NOT NULL,
+    mutual        BOOLEAN,
+    FOREIGN KEY (subscriber_id) REFERENCES users (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (publisher_id) REFERENCES users (id)
+    ON DELETE CASCADE,
+    PRIMARY KEY (id)
+    );
+CREATE INDEX by_subscriber_idx ON friends (subscriber_id);
+CREATE INDEX by_publisher_idx ON friends (publisher_id);
