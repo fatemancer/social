@@ -61,4 +61,32 @@ class PostRepository(
         )
     }
 
+    fun findById(postId: String): PostEntity? {
+        return jdbcTemplate.query(
+            """
+                SELECT p.id as id, post_title as title, pc.post as post, p.user_id as author 
+                FROM posts p
+                JOIN posts_content pc ON p.id = pc.post_id
+                WHERE p.id = ?
+            """.trimIndent(),
+            postMapper,
+            postId
+        )[0]
+    }
+
+    fun update(userId: String, postId: String, text: String) {
+        jdbcTemplate.update(
+            """
+                UPDATE posts_content pc
+                JOIN posts p on p.id = pc.post_id
+                SET pc.post = ?
+                WHERE p.user_id = ?
+                AND p.id = ?
+            """.trimIndent(),
+            text,
+            userId,
+            postId
+        )
+    }
+
 }

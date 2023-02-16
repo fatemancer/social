@@ -5,7 +5,7 @@ import org.openapi.model.DialogMessage
 import org.openapi.model.DialogUserIdSendPostRequest
 import org.springframework.http.ResponseEntity
 
-class DIalogService : DialogApiDelegate {
+class DialogService : DialogApiDelegate {
 
     override fun dialogUserIdListGet(userId: String): ResponseEntity<List<DialogMessage>> {
         return super.dialogUserIdListGet(userId)

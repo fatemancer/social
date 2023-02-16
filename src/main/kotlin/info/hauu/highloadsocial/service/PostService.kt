@@ -1,8 +1,9 @@
 package info.hauu.highloadsocial.service
 
-import info.hauu.highloadsocial.config.CACHE_UPDATE_QUEUE
+import info.hauu.highloadsocial.config.AUTHOR_CACHE_UPDATE_QUEUE
 import info.hauu.highloadsocial.config.POST_UPDATE_CACHE
 import info.hauu.highloadsocial.config.PostCacheChunk
+import info.hauu.highloadsocial.config.SUBSCRIBER_CACHE_UPDATE_QUEUE
 import info.hauu.highloadsocial.model.api.PostRequest
 import info.hauu.highloadsocial.repository.FriendRepository
 import info.hauu.highloadsocial.repository.PostRepository
@@ -17,20 +18,22 @@ import org.springframework.http.ResponseEntity
 import org.springframework.jms.core.JmsTemplate
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.util.stream.Collectors
 
 private val logger = KotlinLogging.logger {}
+
 @Service
 class PostService(
     val postRepository: PostRepository,
     val postCacheService: PostCacheService
-    ) : PostApiDelegate {
+) : PostApiDelegate {
 
     override fun postCreatePost(postCreatePostRequest: PostCreatePostRequest?): ResponseEntity<String> {
         logger.info("Incoming post request: ${getRequest()}")
         val userId = currentUser()
         val postRequest = PostRequest(post = postCreatePostRequest?.text, userId = userId)
         postRepository.save(postRequest)
-        postCacheService.invalidate(userId)
+        postCacheService.invalidateAuthorCache(userId)
         logger.info("Created post \"$postRequest\"")
         return ResponseEntity.ok("Post saved")
     }
@@ -43,17 +46,29 @@ class PostService(
     }
 
     override fun postFeedGet(offset: BigDecimal, limit: BigDecimal): ResponseEntity<List<Post>> {
-        // лимитируем здесь, т.к. кэш дешёвый и лучше один раз сохранить последнюю 1000,
-        // чем забивать кэш записями на разное число постов
-        return ResponseEntity.ok(postCacheService.getLastBatch(currentUser()).orEmpty().subList(0, limit.toInt()))
+        val currentUser = currentUser()
+        logger.info("Requesting feed for $currentUser with limit $limit offset $offset")
+        val posts = postCacheService.getLastBatch(currentUser).orEmpty()
+        return ResponseEntity.ok(
+            posts.stream().skip(offset.toLong()).limit(limit.toLong()).collect(Collectors.toList())
+        )
     }
 
     override fun postGetIdGet(id: String): ResponseEntity<Post> {
-        return super.postGetIdGet(id)
+        val result = postRepository.findById(id) ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(result.run {
+            Post(id = id, text = post, authorUserId = author)
+        })
     }
 
     override fun postUpdatePut(postUpdatePutRequest: PostUpdatePutRequest?): ResponseEntity<Unit> {
-        return super.postUpdatePut(postUpdatePutRequest)
+        val authorId = currentUser()
+        if (postUpdatePutRequest == null) {
+            return ResponseEntity.badRequest().build()
+        }
+        val update = postRepository.update(authorId, postUpdatePutRequest.id, postUpdatePutRequest.text)
+        postCacheService.invalidateAuthorCache(authorId)
+        return ResponseEntity.ok(update)
     }
 }
 
@@ -72,11 +87,20 @@ class PostCacheService(
             .map { p -> Post(id = p.id.toString(), text = p.post, authorUserId = p.author) }
     }
 
-    // раз в 5 секунд для 1000 читателей будет обновляться кэш
-    fun invalidate(authorId: String) {
+    /**
+     * @author пользователь, кэши чьих читателей будут сброшены пачками по 1000 пользователей
+     */
+    fun invalidateAuthorCache(authorId: String) {
         val subscribers = friendRepository.getSubscribers(authorId)
         subscribers.chunked(1000) {
-            jmsTemplate.convertAndSend(CACHE_UPDATE_QUEUE, PostCacheChunk(authorId, it))
+            jmsTemplate.convertAndSend(AUTHOR_CACHE_UPDATE_QUEUE, PostCacheChunk(authorId, it))
         }
+    }
+
+    /**
+     * @subscriberId пользователь, чей кэш будет сброшен
+     */
+    fun invalidateSubscriberCache(subscriberId: String) {
+        jmsTemplate.convertAndSend(SUBSCRIBER_CACHE_UPDATE_QUEUE, subscriberId)
     }
 }

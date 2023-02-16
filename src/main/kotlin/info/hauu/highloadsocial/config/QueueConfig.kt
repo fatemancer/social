@@ -10,7 +10,8 @@ import org.springframework.jms.support.converter.MessageType
 import javax.jms.Queue
 
 
-const val CACHE_UPDATE_QUEUE = "postCacheUpdateQueue"
+const val AUTHOR_CACHE_UPDATE_QUEUE = "authorCacheUpdate"
+const val SUBSCRIBER_CACHE_UPDATE_QUEUE = "subscriberCacheUpdate"
 
 @EnableJms
 @Configuration
@@ -18,7 +19,7 @@ class QueueConfig {
 
     @Bean
     fun postCacheUpdate(): Queue? {
-        return ActiveMQQueue(CACHE_UPDATE_QUEUE)
+        return ActiveMQQueue(AUTHOR_CACHE_UPDATE_QUEUE)
     }
 
     @Bean

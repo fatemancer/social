@@ -34,7 +34,7 @@ class CacheInvalidator(
 
     val cacheBlockingKeys: ConcurrentHashMap<String, ConcurrentHashMap<String, ReentrantLock>> = ConcurrentHashMap()
 
-    @JmsListener(destination = CACHE_UPDATE_QUEUE)
+    @JmsListener(destination = AUTHOR_CACHE_UPDATE_QUEUE)
     fun invalidate(cacheKeys: PostCacheChunk) {
         val cacheLocks = cacheBlockingKeys.getOrPut(POST_UPDATE_CACHE) {
             ConcurrentHashMap()
@@ -58,6 +58,12 @@ class CacheInvalidator(
             logger.info("Successfully unlocked $authorLock")
             authorLock.unlock()
         }
+    }
+
+    @JmsListener(destination = SUBSCRIBER_CACHE_UPDATE_QUEUE)
+    fun invalidate(userId: String) {
+        logger.info("Invalidated cache for $userId")
+        manager.getCache(POST_UPDATE_CACHE)?.evictIfPresent(userId)
     }
 }
 

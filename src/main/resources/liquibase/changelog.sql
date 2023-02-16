@@ -103,3 +103,9 @@ CREATE TABLE IF NOT EXISTS friends
     );
 CREATE INDEX by_subscriber_idx ON friends (subscriber_id);
 CREATE INDEX by_publisher_idx ON friends (publisher_id);
+
+--changeset liquibase:uniqfriends
+ALTER TABLE friends DROP FOREIGN KEY friends_ibfk_1;
+DROP INDEX by_subscriber_idx ON friends;
+CREATE UNIQUE INDEX by_subscriber_unique_idx ON friends(subscriber_id, publisher_id);
+ALTER TABLE friends ADD CONSTRAINT friends_ibfk_1 FOREIGN KEY (subscriber_id) REFERENCES users (id) ON DELETE CASCADE;

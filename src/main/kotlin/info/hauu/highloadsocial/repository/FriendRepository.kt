@@ -17,4 +17,30 @@ class FriendRepository(val jdbcTemplate: JdbcTemplate) {
             authorId
         )
     }
+
+    fun subscribe(subscriberId: String, publisherId: String) {
+        jdbcTemplate.update(
+            """
+                INSERT IGNORE INTO friends
+                (subscriber_id, publisher_id)
+                VALUES 
+                (?, ?)
+            """.trimIndent(),
+            subscriberId,
+            publisherId
+        )
+    }
+
+    fun unsubscribe(subscriberId: String, publisherId: String) {
+        jdbcTemplate.update(
+            """
+                DELETE FROM friends
+                WHERE subscriber_id = ?
+                AND publisher_id = ?
+            """.trimIndent(),
+            subscriberId,
+            publisherId
+        )
+    }
+
 }
