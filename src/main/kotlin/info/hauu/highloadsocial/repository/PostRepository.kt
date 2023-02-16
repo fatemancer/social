@@ -61,7 +61,7 @@ class PostRepository(
         )
     }
 
-    fun findById(postId: String): PostEntity? {
+    fun findById(postId: String): List<PostEntity>? {
         return jdbcTemplate.query(
             """
                 SELECT p.id as id, post_title as title, pc.post as post, p.user_id as author 
@@ -71,7 +71,7 @@ class PostRepository(
             """.trimIndent(),
             postMapper,
             postId
-        )[0]
+        )
     }
 
     fun update(userId: String, postId: String, text: String) {

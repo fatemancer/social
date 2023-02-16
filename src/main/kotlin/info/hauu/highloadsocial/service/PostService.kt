@@ -55,10 +55,10 @@ class PostService(
     }
 
     override fun postGetIdGet(id: String): ResponseEntity<Post> {
-        val result = postRepository.findById(id) ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(result.run {
-            Post(id = id, text = post, authorUserId = author)
-        })
+        val foundPost = postRepository.findById(id)?.map {
+            Post(id = it.id.toString(), text = it.post, authorUserId = it.author)
+        }?.firstOrNull() ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(foundPost)
     }
 
     override fun postUpdatePut(postUpdatePutRequest: PostUpdatePutRequest?): ResponseEntity<Unit> {
