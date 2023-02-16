@@ -1,6 +1,10 @@
 package info.hauu.highloadsocial.service
 
+import info.hauu.highloadsocial.config.CACHE_UPDATE_QUEUE
+import info.hauu.highloadsocial.config.POST_UPDATE_CACHE
+import info.hauu.highloadsocial.config.PostCacheChunk
 import info.hauu.highloadsocial.model.api.PostRequest
+import info.hauu.highloadsocial.repository.FriendRepository
 import info.hauu.highloadsocial.repository.PostRepository
 import info.hauu.highloadsocial.util.currentUser
 import mu.KotlinLogging
@@ -10,6 +14,7 @@ import org.openapi.model.PostCreatePostRequest
 import org.openapi.model.PostUpdatePutRequest
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.ResponseEntity
+import org.springframework.jms.core.JmsTemplate
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
@@ -22,8 +27,10 @@ class PostService(
 
     override fun postCreatePost(postCreatePostRequest: PostCreatePostRequest?): ResponseEntity<String> {
         logger.info("Incoming post request: ${getRequest()}")
-        val postRequest = PostRequest(post = postCreatePostRequest?.text, userId = currentUser())
+        val userId = currentUser()
+        val postRequest = PostRequest(post = postCreatePostRequest?.text, userId = userId)
         postRepository.save(postRequest)
+        postCacheService.invalidate(userId)
         logger.info("Created post \"$postRequest\"")
         return ResponseEntity.ok("Post saved")
     }
@@ -52,15 +59,24 @@ class PostService(
 
 @Service
 class PostCacheService(
-    val postRepository: PostRepository
+    val postRepository: PostRepository,
+    val friendRepository: FriendRepository,
+    val jmsTemplate: JmsTemplate
 ) {
 
     val FEED_SIZE: Int = 1000
 
-    @Cacheable(cacheNames = ["friendPosts"])
+    @Cacheable(cacheNames = [POST_UPDATE_CACHE])
     fun getLastBatch(userId: String): List<Post>? {
         return postRepository.feed(userId, FEED_SIZE)
             .map { p -> Post(id = p.id.toString(), text = p.post, authorUserId = p.author) }
     }
 
+    // раз в 5 секунд для 1000 читателей будет обновляться кэш
+    fun invalidate(authorId: String) {
+        val subscribers = friendRepository.getSubscribers(authorId)
+        subscribers.chunked(1000) {
+            jmsTemplate.convertAndSend(CACHE_UPDATE_QUEUE, PostCacheChunk(authorId, it))
+        }
+    }
 }

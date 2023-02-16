@@ -14,6 +14,8 @@ import java.sql.Statement
 class PostRepository(
     val jdbcTemplate: JdbcTemplate,
 ) {
+    val postMapper = DataClassRowMapper(PostEntity::class.java)
+
     @Transactional
     fun save(postRequest: PostRequest) {
         val keyHolder = GeneratedKeyHolder()
@@ -45,14 +47,15 @@ class PostRepository(
     fun feed(userId: String, feedSize: Int): List<PostEntity> {
         return jdbcTemplate.query(
             """
-                SELECT id, title, post, p.user as author FROM posts p
+                SELECT p.id as id, post_title as title, pc.post as post, p.user_id as author 
+                FROM posts p
                 JOIN posts_content pc ON p.id = pc.post_id
                 JOIN friends f ON f.publisher_id = p.user_id
                 WHERE f.subscriber_id = ?
                 ORDER BY p.id DESC
                 LIMIT ?
             """.trimIndent(),
-            DataClassRowMapper<PostEntity>(),
+            postMapper,
             userId,
             feedSize
         )
