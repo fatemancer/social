@@ -1,8 +1,8 @@
-package info.hauu.highloadsocial.model
+package info.hauu.highloadsocial.model.api
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class UserInternal(
+data class UserRequest(
 
     val id: String,
 

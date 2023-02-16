@@ -1,8 +1,8 @@
-package info.hauu.highloadsocial.model
+package info.hauu.highloadsocial.model.domain
 
 import java.util.*
 
-data class UserRow(
+data class UserEntity(
     val id: UUID,
     val firstName: String,
     val secondName: String,

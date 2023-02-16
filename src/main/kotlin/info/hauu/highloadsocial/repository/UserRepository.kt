@@ -2,8 +2,8 @@ package info.hauu.highloadsocial.repository
 
 import de.nycode.bcrypt.hash
 import de.nycode.bcrypt.verify
-import info.hauu.highloadsocial.model.UserInternal
-import info.hauu.highloadsocial.model.UserRow
+import info.hauu.highloadsocial.model.api.UserRequest
+import info.hauu.highloadsocial.model.domain.UserEntity
 import info.hauu.highloadsocial.service.LoginService
 import info.hauu.highloadsocial.service.internal.FeatureService
 import mu.KotlinLogging
@@ -21,7 +21,7 @@ class UserRepository(
         val jdbcReplicaTemplate: JdbcTemplate,
         val featureService: FeatureService
 ) {
-    val userMapper = DataClassRowMapper(UserRow::class.java)
+    val userMapper = DataClassRowMapper(UserEntity::class.java)
     val userQuery = """
          SELECT u.id as id, first_name, second_name, age, t.tag_value as biography, city
          FROM users AS u
@@ -35,7 +35,7 @@ class UserRepository(
     val orderingClause = """ ORDER BY id"""
 
     @Transactional
-    fun save(user: UserInternal) {
+    fun save(user: UserRequest) {
         with(user) {
             saveUser()
             saveCreds()
@@ -44,12 +44,12 @@ class UserRepository(
         }
     }
 
-    fun UserInternal.saveCity() {
+    fun UserRequest.saveCity() {
         // todo: возможно надо будет добавить нормализацию разных написаний/id регионов
         jdbcTemplate.update("INSERT INTO location (user_id, city) VALUES (?, ?)", id, city)
     }
 
-    fun UserInternal.saveUser() {
+    fun UserRequest.saveUser() {
         jdbcTemplate.update(
                 "INSERT INTO users (id, first_name, second_name, age) VALUES (?, ?, ?, ?)",
                 id,
@@ -59,12 +59,12 @@ class UserRepository(
         )
     }
 
-    fun UserInternal.saveCreds() {
+    fun UserRequest.saveCreds() {
         val encrypted = hash(password)
         jdbcTemplate.update("INSERT INTO user_credentials (user_id, bcrypt) VALUES (?, ?)", id, encrypted)
     }
 
-    fun UserInternal.saveBio() {
+    fun UserRequest.saveBio() {
         // todo: пока храним как есть единым тегом но мб потом понадобится список и поиск по ним
         val tagKeyholder = GeneratedKeyHolder()
         val ps = PreparedStatementCreator {
@@ -77,7 +77,7 @@ class UserRepository(
         jdbcTemplate.update("INSERT INTO user_tags (tag_id, user_id) VALUES (?, ?)", tagKeyholder.key, id)
     }
 
-    fun find(id: String): UserRow? {
+    fun find(id: String): UserEntity? {
         return try {
             val ps = PreparedStatementSetter {
                 it.setString(1, id)
@@ -94,7 +94,7 @@ class UserRepository(
         }
     }
 
-    fun find(firstName: String, secondName: String): List<UserRow>? {
+    fun find(firstName: String, secondName: String): List<UserEntity>? {
         return try {
             val ps = PreparedStatementSetter {
                 it.setString(1, wrapLike(firstName))

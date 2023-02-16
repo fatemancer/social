@@ -1,6 +1,6 @@
 package info.hauu.highloadsocial.service
 
-import info.hauu.highloadsocial.model.SafeLoginRequest
+import info.hauu.highloadsocial.model.api.SafeLoginRequest
 import info.hauu.highloadsocial.repository.UserRepository
 import info.hauu.highloadsocial.service.validators.Constraints
 import info.hauu.highloadsocial.service.validators.hasId

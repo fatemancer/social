@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS posts
     id         BIGINT NOT NULL AUTO_INCREMENT,
     user_id    VARCHAR(80),
     post_title TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
     ON DELETE CASCADE,
     PRIMARY KEY (id)
@@ -79,6 +80,8 @@ CREATE TABLE IF NOT EXISTS posts_content
 (
     post_id BIGINT NOT NULL,
     post    MEDIUMTEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts (id)
     ON DELETE CASCADE
     );

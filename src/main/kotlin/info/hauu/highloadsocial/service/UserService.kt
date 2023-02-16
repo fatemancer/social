@@ -1,5 +1,6 @@
 package info.hauu.highloadsocial.service
 
+import info.hauu.highloadsocial.model.api.UserRequest
 import info.hauu.highloadsocial.repository.UserRepository
 import info.hauu.highloadsocial.service.validators.Constraints
 import info.hauu.highloadsocial.service.validators.hasId
@@ -36,10 +37,10 @@ class UserService(val userRepository: UserRepository) : UserApiDelegate, UserDet
         }
     }
 
-    private fun validate(userRegisterPostRequest: UserRegisterPostRequest?): info.hauu.highloadsocial.model.UserInternal {
+    private fun validate(userRegisterPostRequest: UserRegisterPostRequest?): UserRequest {
         Constraints(hasPassword(userRegisterPostRequest), hasId(userRegisterPostRequest)).test()
         return userRegisterPostRequest!!.run {
-            info.hauu.highloadsocial.model.UserInternal(
+            UserRequest(
                 UUID.randomUUID().toString(),
                 firstName!!,
                 secondName.orEmpty(),
