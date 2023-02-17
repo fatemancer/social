@@ -109,3 +109,19 @@ ALTER TABLE friends DROP FOREIGN KEY friends_ibfk_1;
 DROP INDEX by_subscriber_idx ON friends;
 CREATE UNIQUE INDEX by_subscriber_unique_idx ON friends(subscriber_id, publisher_id);
 ALTER TABLE friends ADD CONSTRAINT friends_ibfk_1 FOREIGN KEY (subscriber_id) REFERENCES users (id) ON DELETE CASCADE;
+
+--changeset liquibase:dialog
+CREATE TABLE IF NOT EXISTS dialog
+(
+    id              BIGINT NOT NULL AUTO_INCREMENT,
+    initiator_id    VARCHAR(80) NOT NULL,
+    receiver_id     VARCHAR(80) NOT NULL,
+    text            TEXT NOT NULL,
+    sent_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read         BOOLEAN,
+    FOREIGN KEY (initiator_id) REFERENCES users (id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users (id)
+    ON DELETE CASCADE,
+    PRIMARY KEY (id)
+)
