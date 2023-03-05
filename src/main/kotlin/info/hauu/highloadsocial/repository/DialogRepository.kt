@@ -3,7 +3,9 @@ package info.hauu.highloadsocial.repository
 import info.hauu.highloadsocial.model.domain.DialogEntity
 import org.springframework.jdbc.core.DataClassRowMapper
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.stereotype.Service
 
+@Service
 class DialogRepository(
     val jdbcTemplate: JdbcTemplate
 ) {
