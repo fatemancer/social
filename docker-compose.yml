@@ -30,6 +30,13 @@ services:
     volumes:
       - db:/var/lib/mysql
       - ./db/my.cnf:/etc/my.cnf:ro
+  websocket:
+    build: ./highload-social-websocket
+    restart: on-failure
+    ports:
+      - $WEBSOCKET_LOCAL_PORT:$WEBSOCKET_DOCKER_PORT
+      - $WEBSOCKET_DEBUG_PORT:$JAVA_DEBUG_PORT
 
 volumes:
   db:
+  websocket:
