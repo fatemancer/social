@@ -6,3 +6,6 @@ pluginManagement {
     }
 }
 rootProject.name = "highload-social"
+
+include("core")
+include("websocket")

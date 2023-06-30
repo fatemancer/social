@@ -1,0 +1,11 @@
+[versions]
+spring-boot="2.6.7"
+
+[libraries]
+
+spring-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+spring-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+
+
+[bundles]
+spring = [ "spring-web", "spring-actuator" ]

@@ -1,7 +1,7 @@
 HELP.md
 .gradle
 build/
-!gradle/wrapper/gradle-wrapper.jar
+!core/gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -38,5 +38,5 @@ out/
 
 ### OpenAPI generated
 generated
-src/test/resources/grafana/ext
-src/test/resources/prometheus/ext
+core/src/test/resources/grafana/ext
+core/src/test/resources/prometheus/ext

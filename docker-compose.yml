@@ -2,7 +2,7 @@ services:
   app:
     depends_on:
       - $MYSQLDB_MASTER_HOST
-    build: ./
+    build: ./core
     restart: on-failure
     env_file: ./.env
     ports:
@@ -29,9 +29,9 @@ services:
       - $MYSQLDB_EXTERNAL_PORT:$MYSQLDB_MASTER_PORT
     volumes:
       - db:/var/lib/mysql
-      - ./db/my.cnf:/etc/my.cnf:ro
+      - ./core/db/my.cnf:/etc/my.cnf:ro
   websocket:
-    build: ./highload-social-websocket
+    build: ./websocket
     restart: on-failure
     ports:
       - $WEBSOCKET_LOCAL_PORT:$WEBSOCKET_DOCKER_PORT
