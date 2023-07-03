@@ -40,7 +40,10 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
     implementation("org.springframework.boot:spring-boot-starter-test")
+
+    // queues
     implementation("org.springframework.boot:spring-boot-starter-activemq")
+    implementation("org.springframework.kafka:spring-kafka")
 
     // db
     implementation("org.springframework:spring-jdbc")

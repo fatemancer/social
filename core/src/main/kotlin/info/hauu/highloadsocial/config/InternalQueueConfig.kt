@@ -15,7 +15,7 @@ const val SUBSCRIBER_CACHE_UPDATE_QUEUE = "subscriberCacheUpdate"
 
 @EnableJms
 @Configuration
-class QueueConfig {
+class InternalQueueConfig {
 
     @Bean
     fun postCacheUpdate(): Queue? {

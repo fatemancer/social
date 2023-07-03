@@ -30,12 +30,55 @@ services:
     volumes:
       - db:/var/lib/mysql
       - ./core/db/my.cnf:/etc/my.cnf:ro
-  websocket:
+  # имитируем кластер из вебсокетов
+  websocket-odd:
+    build: ./websocket
+    restart: on-failure
+    environment:
+      - PARTITION_ID=1
+    ports:
+      - $WEBSOCKET_LOCAL_PORT:$WEBSOCKET_DOCKER_PORT
+      - $WEBSOCKET_DEBUG_PORT:$JAVA_DEBUG_PORT
+    depends_on:
+      - app
+      - kafka-server
+  websocket-even:
     build: ./websocket
     restart: on-failure
     ports:
       - $WEBSOCKET_LOCAL_PORT:$WEBSOCKET_DOCKER_PORT
       - $WEBSOCKET_DEBUG_PORT:$JAVA_DEBUG_PORT
+    depends_on:
+      - app
+      - kafka-server
+    environment:
+      - PARTITION_ID=2
+  kafka-server:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+      - 29093:29093
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-server:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms512m"
+    networks:
+      - communal
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - communal
 
 volumes:
   db:

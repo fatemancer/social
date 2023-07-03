@@ -1,3 +1,8 @@
+app:
+  queue:
+    kafka-bootstrap: kafka-server:9092
+    post-notification-topic: "post-notification"
+
 management:
   endpoints:
     web:

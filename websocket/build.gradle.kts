@@ -18,4 +18,17 @@ repositories {
 dependencies {
     implementation(libs.spring.web)
     implementation(libs.spring.actuator)
+    implementation("org.springframework:spring-websocket")
+    implementation("org.springframework:spring-messaging")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // utils
+    implementation("org.apache.commons:commons-lang3:3.12.0")
+
+    // logs
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
+
+    // db (auth)
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 }

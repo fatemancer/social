@@ -17,23 +17,38 @@ class PostRepository(
     val postMapper = DataClassRowMapper(PostEntity::class.java)
 
     @Transactional
-    fun save(postRequest: PostRequest) {
+    fun save(postRequest: PostRequest): PostEntity {
         val keyHolder = GeneratedKeyHolder()
         val psPost = PreparedStatementCreator {
-            val ps = it.prepareStatement("INSERT INTO posts (post_title, user_id) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)
+            val ps = it.prepareStatement(
+                "INSERT INTO posts (post_title, user_id) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS
+            )
             ps.setString(1, postRequest.title)
             ps.setString(2, postRequest.userId)
             ps
         }
         jdbcTemplate.update(psPost, keyHolder)
 
+        val postIdKeyHolder = GeneratedKeyHolder()
         val psContent = PreparedStatementCreator {
-            val ps = it.prepareStatement("INSERT INTO posts_content (post_id, post) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)
+            val ps = it.prepareStatement(
+                "INSERT INTO posts_content (post_id, post) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS
+            )
             ps.setInt(1, keyHolder.key?.toInt()!!)
             ps.setString(2, postRequest.post)
             ps
         }
-        jdbcTemplate.update(psContent)
+        jdbcTemplate.update(psContent, postIdKeyHolder)
+        return postIdKeyHolder.key?.let {
+            PostEntity(
+                it.toLong(),
+                postRequest.title,
+                postRequest.post ?: "",
+                postRequest.userId
+            )
+        } ?: throw IllegalStateException("Post saved but no id returned")
     }
 
     fun delete(postId: Long, userId: String) {
@@ -61,7 +76,7 @@ class PostRepository(
         )
     }
 
-    fun findById(postId: String): List<PostEntity>? {
+    fun findById(postId: String): PostEntity? {
         return jdbcTemplate.query(
             """
                 SELECT p.id as id, post_title as title, pc.post as post, p.user_id as author 
@@ -71,7 +86,7 @@ class PostRepository(
             """.trimIndent(),
             postMapper,
             postId
-        )
+        ).firstOrNull()
     }
 
     fun update(userId: String, postId: String, text: String) {
